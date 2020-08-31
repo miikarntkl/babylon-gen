@@ -116,7 +116,7 @@ function rotateSpheres() {
 }
 
 /**
- * Determine a
+ * Provides a shape to generate
  */
 function shapeGeneration(osc) {
     //TODO: attach to to handlers for dynamic changes
