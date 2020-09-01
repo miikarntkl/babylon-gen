@@ -8,15 +8,16 @@ import {
     StandardMaterial,
     Color3,
     GlowLayer,
+    Engine,
 } from "@babylonjs/core";
-import SceneComponent from "./SceneComponent";
+import SceneComponent from "./components/SceneComponent";
 import "./App.css";
+import { Button } from "./components/Button";
 
-const rand1 = [];
-const rand2 = [];
-var pivot = [];
-var sphereCount = 1000;
+var sphereCount = 1;
 var spheres = [];
+var timecounter = 0;
+var speed = 0.0001;
 
 /**
  * Create elements on the initialized scene
@@ -33,7 +34,7 @@ const onSceneReady = (scene) => {
         new Vector3(0, 0, 0),
         scene
     );
-    camera.setPosition(new Vector3(0, -400, 0));
+    camera.setPosition(new Vector3(0, 0, -30));
     camera.speed = 50;
     scene.clearColor = new Color3(0, 0, 0);
 
@@ -46,25 +47,12 @@ const onSceneReady = (scene) => {
     var starMaterial = new StandardMaterial("starMaterial", scene);
     starMaterial.emissiveColor = new Color3(1, 1, 1);
 
-    initialize(scene, starMaterial);
     createSpheres(scene, starMaterial);
 
     for (let i = 0; i < 1; i++) {
-        rotateSpheres();
+        //rotateSpheres();
     }
 };
-
-/**
- * init variables
- * @param {*} scene
- * @param {*} material
- */
-function initialize(scene, material) {
-    for (let i = 0; i < sphereCount; i++) {
-        rand1[i] = Math.random() * 2;
-        rand2[i] = Math.random() / 10;
-    }
-}
 
 /**
  * Create spheres and their pivots, initiliaze random variables
@@ -82,36 +70,28 @@ function createSpheres(scene, material) {
  * @param {*} index
  */
 function createSphere(scene, material, index) {
-    pivot.push(new TransformNode("root" + index));
-    pivot[index].position = new Vector3(0, 0, 0);
-    spheres.push(
-        MeshBuilder.CreateSphere(
-            "sphere",
-            { diameter: rand2[index] * 10 },
-            scene
-        )
-    );
-    spheres[index].position.y = rand1[index];
-    spheres[index].position.x = rand1[index];
-    spheres[index].position.z = rand1[index];
-    spheres[index].parent = pivot[index];
+    spheres.push(MeshBuilder.CreateSphere("sphere", { diameter: 1 }, scene));
+    spheres[index].position.y = 0;
+    spheres[index].position.x = 0;
+    spheres[index].position.z = 0;
     spheres[index].material = material;
 }
 
 /**
  * Rotate spheres around their pivots
  */
-function rotateSpheres() {
-    var osc = 0;
-    for (var i = 0; i < sphereCount; i++) {
-        osc += i * (1 / (sphereCount * 1000));
-        if (spheres[i] !== undefined) {
-            var sign = shapeGeneration(osc);
-            spheres[i].position.x += sign * Math.random();
-            spheres[i].position.y += sign * Math.random();
-            spheres[i].position.z += sign * Math.random();
-            pivot[i].rotate(new Vector3(0, 0, 1), sign * rand1[i], Space.WORLD);
-        }
+function rotateSpheres(scene) {
+    for (let i = 0; i < sphereCount; i++) {
+        var x = Math.cos(timecounter) * 10;
+        var y = Math.sin(timecounter) * 10;
+        var z = spheres[i].z;
+
+        spheres[i].position = new Vector3(x, y, z);
+        timecounter += scene.getEngine().getDeltaTime() * speed;
+        //if (Math.sin(timecounter) === 0) timecounter = 0;
+        console.log(x);
+        console.log(y);
+        console.log(timecounter);
     }
 }
 
@@ -124,45 +104,15 @@ function shapeGeneration(osc) {
     return sign;
 }
 
-/* TODO: replace with react component
-function createButtons(scene, material) {
-    var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI(
-        "UI",
-        true,
-        scene
-    );
-
-    var panel = new GUI.StackPanel();
-    panel.width = "220px";
-    panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
-    panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-    advancedTexture.addControl(panel);
-
-    var button = GUI.Button.CreateSimpleButton("but", "ADD");
-    button.width = 0.1;
-    button.height = "30px";
-    button.color = "white";
-    button.background = "gray";
-    advancedTexture.addControl(button);
-    button.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-    button.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-    button.onPointerClickObservable.add(handleClick(scene, material));
-    advancedTexture.addControl(button);
-}
-
-var handleClick = (scene, material) => {
-    for (let i = sphereCount - 1; i < 100; i) {
-        if (spheres[i] !== null) createSphere(scene, material, i);
-    }
-    sphereCount += 100;
-    console.log("ADDITION +" + spheres.length);
-};
-*/
 /**
  * Runs on every frame render.
  */
 const onRender = (scene) => {
-    rotateSpheres();
+    rotateSpheres(scene);
+};
+
+const onClick = () => {
+    timecounter = 0;
 };
 
 export default () => (
@@ -173,5 +123,6 @@ export default () => (
             onRender={onRender}
             id="my-canvas"
         ></SceneComponent>
+        <Button onClick={onClick}>Reset</Button>
     </div>
 );
